@@ -7,14 +7,13 @@
 <title>SACRI · Tableau de bord commercial</title>
 <link rel="icon" href="data:,">
 <link rel="preload" href="assets/Inter.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="assets/style.css?v=20261118d">
+<link rel="stylesheet" href="assets/style.css?v=20261119a">
 </head>
 <body>
-<div class="demo"><div class="wrap">Données de démonstration · clients, montants et dates fictifs</div></div>
 
 <header class="masthead">
   <div class="wrap mh">
-    <img src="assets/logo-sacri.png" alt="SACRI" class="logo">
+    <img src="assets/logo-sacri.png?v=20261119a" alt="SACRI" class="logo">
     <div class="mh-txt">
       <p class="eyebrow">Tableau de bord commercial</p>
       <p class="arrete">Situation du <span id="today"></span></p>
@@ -37,62 +36,65 @@
 
   <section class="kpis" id="kpis"></section>
 
-  <section class="block">
-    <div class="bh"><span class="num">01</span><h2>Devis</h2></div>
-    <div class="grid2">
+  <section class="block" id="ventes">
+    <div class="bh"><span class="num">01</span><h2>Ventes</h2><span class="bh-s">devis émis depuis le 1er septembre</span></div>
+    <div class="hero-sales">
       <div class="card">
-        <p class="cap">Du devis envoyé au devis gagné <span class="note">nombre de devis depuis septembre · relancés = au moins une relance</span></p>
-        <div class="ch ch-s"><canvas id="c-funnel"></canvas></div>
+        <div class="hs-top">
+          <div>
+            <p class="lbl">Gagné depuis septembre</p>
+            <p class="big" id="v-gagne"></p>
+            <p class="sub" id="v-gagne-s"></p>
+          </div>
+          <div class="ring" id="ring-taux"></div>
+        </div>
+        <p class="cap2">Objectif contre réalisé, par mois <span class="note" id="obj-note"></span></p>
+        <div class="ch ch-obj"><canvas id="c-obj"></canvas></div>
+        <div class="legend" id="obj-leg"></div>
+      </div>
+      <div class="card">
+        <p class="cap2">Entonnoir des affaires <span class="note">nombre de devis et montant HT, du devis envoyé au devis gagné</span></p>
+        <div class="funnel" id="funnel"></div>
         <p class="foot" id="funnel-note"></p>
       </div>
+    </div>
+    <div class="grid2 mt16">
       <div class="card">
-        <p class="cap">Montant en cours par étape <span class="note">FCFA HT</span></p>
-        <div class="ch ch-s"><canvas id="c-etapes"></canvas></div>
-        <p class="foot" id="etapes-note"></p>
+        <p class="cap2">Devis en cours, par gamme <span class="note">montant HT des devis envoyés, relancés ou en négociation</span></p>
+        <div class="gamme">
+          <div class="ch ch-donut"><canvas id="c-gamme"></canvas><div class="donut-c" id="donut-c"></div></div>
+          <ul class="gl" id="gamme-leg"></ul>
+        </div>
+        <div class="feat" id="feat"></div>
+      </div>
+      <div class="card">
+        <p class="cap2">Par commercial <span class="note">montant en cours et montant gagné depuis septembre, FCFA HT</span></p>
+        <div class="coms" id="coms"></div>
       </div>
     </div>
   </section>
 
-  <section class="block">
-    <div class="bh"><span class="num">02</span><h2>À faire aujourd'hui</h2></div>
-    <div class="grid2">
-      <div class="card">
-        <p class="cap"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg></span>Relances du jour <span class="pill" id="n-rel"></span></p>
-        <ul class="list" id="relances"></ul>
-      </div>
-      <div class="card">
-        <p class="cap"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Appels d'offres à rendre sous 7 jours <span class="pill" id="n-ao"></span></p>
-        <div class="frise" id="frise"></div>
-        <ul class="list" id="ao"></ul>
-      </div>
-    </div>
+  <section class="block" id="jour">
+    <div class="bh"><span class="num">02</span><h2>Affaires du jour</h2><span class="bh-s" id="jour-s"></span></div>
+    <div class="tri" id="tri"></div>
+
+    <div class="sub-h" id="h-rel"><span class="ico"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg></span><h3>Devis à relancer</h3><span class="pill" id="n-rel"></span><span class="hint">les plus en retard d'abord, puis les plus gros</span></div>
+    <div class="acts" id="relances"></div>
+
+    <div class="sub-h" id="h-ao"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><h3>Appels d'offres à rendre sous 7 jours</h3><span class="pill" id="n-ao"></span></div>
+    <div class="acts" id="ao"></div>
+
+    <div class="sub-h" id="h-parc"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span><h3>Machines à réviser ce mois</h3><span class="pill" id="n-parc"></span><span class="hint">révision due avant fin novembre, aucun rappel envoyé</span></div>
+    <div class="acts" id="parc"></div>
   </section>
 
-  <section class="block">
-    <div class="bh"><span class="num">03</span><h2>Parcs clients à entretenir ce mois</h2></div>
-    <div class="card">
-      <p class="cap"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span>Machines dont la révision tombe avant fin novembre, sans rappel envoyé <span class="pill" id="n-parc"></span></p>
-      <div class="parc" id="parc"></div>
-    </div>
+  <section class="block" id="societes">
+    <div class="bh"><span class="num">03</span><h2>Par société</h2><span class="bh-s">touchez une société pour filtrer la page</span></div>
+    <div class="socg" id="socg"></div>
   </section>
 
-  <section class="block">
-    <div class="bh"><span class="num">04</span><h2>Par société et par commercial</h2></div>
-    <div class="stack">
-      <div class="card">
-        <p class="cap">Par société</p>
-        <div class="tbl-wrap"><table class="tbl sum" id="t-soc"></table></div>
-      </div>
-      <div class="card">
-        <p class="cap">Par commercial</p>
-        <div class="ch ch-xs"><canvas id="c-com"></canvas></div>
-        <div class="tbl-wrap"><table class="tbl sum" id="t-com"></table></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="bh"><span class="num">05</span><h2>Tous les devis</h2></div>
+  <section class="block" id="tous">
+    <div class="bh"><span class="num">04</span><h2>Tous les devis</h2></div>
     <div class="card">
       <div class="tools">
         <input type="search" id="q" placeholder="Chercher un client, un objet, un numéro…" aria-label="Chercher">
@@ -103,11 +105,14 @@
     </div>
   </section>
 
-  <footer class="pied">Montants en francs CFA hors taxes · même données que le classeur « SACRI · Vendre » · relance prévue 7 jours après l'envoi ou la dernière relance · révision tous les 6 ou 12 mois selon la machine</footer>
+  <footer class="pied">Montants en francs CFA hors taxes · mêmes données que le classeur « SACRI · Vendre » · données illustratives : clients, montants et dates fictifs · objectif mensuel indicatif, à fixer par la direction · relance prévue 7 jours après l'envoi ou la dernière relance · révision tous les 6 ou 12 mois selon la machine · photos : catalogue SACRI</footer>
 </main>
 
+<div class="ov" id="ov"><div class="pn" role="dialog" aria-modal="true"><div class="pn-h"><span class="ico" id="pn-ico"></span><h4 id="pn-t"></h4><button class="x" id="pn-x" aria-label="Fermer">×</button></div><div class="pn-b" id="pn-b"></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+
 <script src="assets/chart.umd.min.js?v=4"></script>
-<script src="assets/data.js?v=20261118d"></script>
-<script src="assets/app.js?v=20261118d"></script>
+<script src="assets/data.js?v=20261119a"></script>
+<script src="assets/app.js?v=20261119a"></script>
 </body>
 </html>
