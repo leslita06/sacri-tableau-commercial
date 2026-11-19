@@ -54,7 +54,7 @@ a.kpi:hover{border-color:var(--o2);transform:translateY(-1px)}
 .b.dark::before{display:none}
 
 /* blocs */
-.block{margin-top:46px}
+.block{margin-top:46px;scroll-margin-top:70px}
 .bh{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .bh .num{font:700 13px/1 var(--sans);color:#fff;background:var(--o);border-radius:7px;padding:5px 7px;align-self:center}
 h2{font:750 24px/1.2 var(--sans);letter-spacing:-.015em}
@@ -227,6 +227,7 @@ h3{font:700 17px/1.25 var(--sans)}
 @media (max-width:900px){.hero-sales,.grid2{grid-template-columns:1fr}.tri{grid-template-columns:1fr}}
 @media (max-width:640px){
   .wrap{padding:0 16px}
+  .block,.sub-h{scroll-margin-top:125px}
   .logo{height:40px}
   .eyebrow{font-size:10.5px}
   .arrete{font-size:12px}

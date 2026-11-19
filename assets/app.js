@@ -155,7 +155,7 @@ function renderVentes(){
   var fi=idx.filter(function(i){return FIMG[FAM[i]];})[0], top=fi===undefined? null : FAM[fi], img=top && FIMG[top];
   $("feat").style.display = img? "" : "none";
   if(img){ var dl=ec.filter(function(d){return famille(d.gamme)===top;});
-    $("feat").innerHTML='<img src="assets/'+img+'?v=20261119a" alt="'+esc(top)+'" loading="lazy"><p><b>'+esc(top.split(" :")[0])+' : '+dl.length+' devis en cours</b><br>'+M(vals[fi])+' HT, soit '+pct(vals[fi]/tot)+' du montant en cours'+(idx.indexOf(fi)===0?', première gamme':'')+'.</p>'; }
+    $("feat").innerHTML='<img src="assets/'+img+'?v=20261119b" alt="'+esc(top)+'" loading="lazy"><p><b>'+esc(top.split(" :")[0])+' : '+dl.length+' devis en cours</b><br>'+M(vals[fi])+' HT, soit '+pct(vals[fi]/tot)+' du montant en cours'+(idx.indexOf(fi)===0?', première gamme':'')+'.</p>'; }
 
   /* commerciaux */
   var coms=D.commerciaux.filter(comOK);
@@ -272,7 +272,7 @@ function renderSocs(){
     var pr=D.parc.filter(function(m){return m.soc===s&&comOK(m.com)&&m.due;}).length;
     var r={s:s,ec:sum(ec,mt),n:ec.length,g:sum(won(d),mt),t:taux(d),du:dues(d).length,ao:ao,pr:pr}; mx=Math.max(mx,r.ec); return r; });
   $("socg").innerHTML = rows.map(function(r){
-    return '<button type="button" class="sc'+(state.soc===r.s?" on":"")+'" data-soc="'+esc(r.s)+'"><div class="lg"><img src="assets/'+LOGO[r.s]+'?v=20261119a" alt="'+esc(r.s)+'"></div><div class="sv">'+Mc(r.ec)+'</div><div class="sl">en cours · '+r.n+' devis · gagné '+Mc(r.g)+'</div><div class="bar"><i style="width:'+(r.ec/mx*100)+'%;background:#E95B0F"></i></div>'+
+    return '<button type="button" class="sc'+(state.soc===r.s?" on":"")+'" data-soc="'+esc(r.s)+'"><div class="lg"><img src="assets/'+LOGO[r.s]+'?v=20261119b" alt="'+esc(r.s)+'"></div><div class="sv">'+Mc(r.ec)+'</div><div class="sl">en cours · '+r.n+' devis · gagné '+Mc(r.g)+'</div><div class="bar"><i style="width:'+(r.ec/mx*100)+'%;background:#E95B0F"></i></div>'+
       '<div class="sr">'+(r.t===null?'<span class="b nodot">aucun devis tranché</span>':'<span class="b '+(r.t>=0.5?"ok":"red")+'">'+pct(r.t)+' transformé</span>')+(r.du?'<span class="b o">'+r.du+' relance'+(r.du>1?'s':'')+'</span>':'')+(r.ao?'<span class="b blue">'+r.ao+' AO actif'+(r.ao>1?'s':'')+'</span>':'')+(r.pr?'<span class="b nodot">'+r.pr+' révision'+(r.pr>1?'s':'')+'</span>':'')+'</div></button>'; }).join("");
 }
 
