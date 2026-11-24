@@ -44,7 +44,7 @@ function stp(s){return '<span class="pill '+(STB[s]||"n")+'"><span class="dot"><
 
 /* ---------- état ---------- */
 var CAP=!!window.__CAPTURE;
-var state={v:"jour",soc:"Tous",com:"Tous",qr:"",qd:"",fr:"Tous",fd:"EC",more:false};
+var state={v:"jour",soc:"Tous",com:"Tous",qr:"",qd:"",fr:"Tous",fd:"EC",more:false,zmore:false,zone:"Tous",tc:"Ange K.",tj:"Tous"};
 function socOK(s){return state.soc==="Tous"||s===state.soc;}
 function comOK(c){return state.com==="Tous"||c===state.com;}
 function devis(){return D.devis.filter(function(d){return socOK(d.soc)&&comOK(d.com);});}
@@ -70,7 +70,7 @@ function dl(v,cls,txt){return '<span class="dl '+cls+'">'+v+"</span>"+(txt?" "+t
 function kc(o){var tag=o.go?'button type="button" data-goto="'+o.go+'"':"div";return "<"+tag+' class="kc'+(o.key?" key":"")+'"><p class="l">'+ic(o.ico)+o.l+'</p><div class="vr"><p class="v">'+o.v+(o.u?"<small>"+o.u+"</small>":"")+"</p>"+(o.sp?'<div class="sp">'+o.sp+"</div>":"")+'</div><div class="s">'+o.s+"</div></"+(o.go?"button":"div")+">";}
 
 /* ---------- navigation ---------- */
-var VIEWS={jour:"Aujourd'hui",relances:"Relances",devis:"Devis",ventes:"Ventes",echeances:"Échéances"};
+var VIEWS={jour:"Aujourd'hui",relances:"Relances",devis:"Devis",ventes:"Ventes",echeances:"Échéances",terrain:"Terrain"};
 function go(v,noScroll){if(!VIEWS[v])v="jour";state.v=v;
   [].forEach.call(document.querySelectorAll(".view"),function(e){e.classList.toggle("on",e.id==="v-"+v);});
   [].forEach.call(document.querySelectorAll("[data-v]"),function(e){e.classList.toggle("on",e.getAttribute("data-v")===v);});
@@ -261,11 +261,15 @@ document.addEventListener("click",function(e){
   if((t=e.target.closest("[data-act]"))){e.stopPropagation();var a=t.getAttribute("data-act"),n=t.getAttribute("data-n");
     if(a==="msg")drDevis(find(D.devis,n));if(a==="call")drCall(find(D.devis,n));if(a==="aomsg")drAo(find(D.ao,n));if(a==="pmsg")drParc(find(D.parc,n));return;}
   if((t=e.target.closest("[data-open]"))){var k=t.getAttribute("data-open"),nn=t.getAttribute("data-n");
-    if(k==="rel"||k==="dev")drDevis(find(D.devis,nn));if(k==="ao")drAo(find(D.ao,nn));if(k==="parc")drParc(find(D.parc,nn));return;}
+    if(k==="rel"||k==="dev")drDevis(find(D.devis,nn));if(k==="ao")drAo(find(D.ao,nn));if(k==="parc")drParc(find(D.parc,nn));if(k==="vis")drVis(TR.visites.filter(function(v){return v.id===nn;})[0]);if(k==="nv")drNv(TR.portefeuille.filter(function(p){return p.client===nn;})[0]);return;}
   if((t=e.target.closest("[data-goto]"))){go(t.getAttribute("data-goto"));return;}
   if((t=e.target.closest("[data-v]"))){go(t.getAttribute("data-v"));return;}
   if((t=e.target.closest("[data-soc]"))){var s=t.getAttribute("data-soc");setSoc(t.classList.contains("ni")&&state.soc===s?"Tous":s);return;}
   if((t=e.target.closest("tr[data-com],[data-com]"))){var c=t.getAttribute("data-com");setCom(t.tagName==="TR"&&state.com===c?"Tous":c);return;}
+  if((t=e.target.closest("[data-tc]"))){state.tc=t.getAttribute("data-tc");renderRapport();return;}
+  if(e.target.closest("[data-zmore]")){state.zmore=true;renderTer();return;}
+  if((t=e.target.closest("[data-tj]"))){state.tj=t.getAttribute("data-tj");renderTer();return;}
+  if((t=e.target.closest("tr[data-zone]"))){var z=t.getAttribute("data-zone");state.zone=state.zone===z?"Tous":z;renderTer();return;}
   if((t=e.target.closest("[data-fr]"))){state.fr=t.getAttribute("data-fr");renderRel();return;}
   if((t=e.target.closest("[data-fd]"))){state.fd=t.getAttribute("data-fd");state.more=false;renderDev();return;}
   if(e.target.closest("[data-more]")){state.more=true;renderDev();return;}
@@ -275,16 +279,110 @@ document.addEventListener("click",function(e){
   if(!e.target.closest(".sel"))closeMenus();
 });
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDr();closeMenus();}});
+$("zone-f").addEventListener("change",function(){state.zone=this.value;state.zmore=false;renderTer();});
+$("com-f").addEventListener("change",function(){setCom(this.value);});
 $("q-rel").addEventListener("input",function(){state.qr=this.value.trim().toLowerCase();renderRel();});
 $("q-dev").addEventListener("input",function(){state.qd=this.value.trim().toLowerCase();state.more=false;renderDev();});
 window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(h!==state.v&&VIEWS[h])go(h);});
 
+/* ---------- TERRAIN ---------- */
+var TR=window.TERRAIN||{visites:[],portefeuille:[],messages:{},sujets:[],args:[],communes:[],civ:[],villes:{},semaine:[]};
+var SUJ={},ARG={};TR.sujets.forEach(function(s){SUJ[s[0]]=s[1];});TR.args.forEach(function(a){ARG[a[0]]=a[1];});
+var ABJ={};TR.communes.forEach(function(c){ABJ[c.nom]=1;});
+function zoneOK(z){var f=state.zone;return f==="Tous"||(f==="Abidjan"&&ABJ[z])||(f==="Intérieur"&&!ABJ[z])||f===z;}
+function tVis(){return TR.visites.filter(function(v){return socOK(v.soc)&&comOK(v.com)&&zoneOK(v.zone);});}
+function tPort(){return TR.portefeuille.filter(function(p){return socOK(p.soc)&&comOK(p.com)&&zoneOK(p.zone);});}
+function since(s){return s?days(s,T):null;}
+function nonVus(l){return l.filter(function(p){var k=since(p.lv);return k===null||k>30;}).sort(function(a,b){var x=since(a.lv),y=since(b.lv);return (y===null?1e4:y)-(x===null?1e4:x);});}
+function scoreOf(l){var s=l.filter(function(v){return v.sc!=null;});return s.length?sum(s,function(v){return v.sc;})/s.length:null;}
+function f1(x){return (Math.round(x*10)/10).toString().replace(".",",");}
+function scCls(x){return x==null?"n":x>=7?"g":x>=5?"a":"r";}
+var PTL={ok:"Présence pointée",loin:"Pointé hors du site",non:"Non pointé"};
+function ptPill(v){return v.pt==="ok"?'<span class="pill g"><span class="dot"></span>Pointé chez le client</span>':v.pt==="loin"?'<span class="pill a"><span class="dot"></span>Pointé à '+String(v.d).replace(".",",")+" km</span>":'<span class="pill r"><span class="dot"></span>Non pointé</span>';}
+function zoneMenu(){var zs=[];TR.portefeuille.forEach(function(p){if(zs.indexOf(p.zone)<0)zs.push(p.zone);});
+  var ab=zs.filter(function(z){return ABJ[z];}).sort(),it=zs.filter(function(z){return !ABJ[z];}).sort();
+  var opt=function(z,l){return '<option value="'+esc(z)+'"'+(state.zone===z?" selected":"")+">"+esc(l||z)+"</option>";};
+  $("zone-f").innerHTML=opt("Tous","Toutes les zones")+opt("Abidjan","Abidjan, toutes communes")+opt("Intérieur","Intérieur du pays")+'<optgroup label="Communes d\'Abidjan">'+ab.map(function(z){return opt(z);}).join("")+'</optgroup><optgroup label="Villes de l\'intérieur">'+it.map(function(z){return opt(z);}).join("")+"</optgroup>";}
+function renderTer(){
+  zoneMenu();$("com-f").innerHTML=["Tous"].concat(COMS).map(function(c){return '<option value="'+esc(c)+'"'+(state.com===c?" selected":"")+">"+(c==="Tous"?"Tous les commerciaux":esc(c))+"</option>";}).join("");
+  var vs=tVis(),pf=tPort(),nv=nonVus(pf),td=vs.filter(function(v){return v.j===TR.jour;}),pok=vs.filter(function(v){return v.pt==="ok";});
+  var tdr=td.filter(function(v){return !v.abs;}),ab=sum(tdr,function(v){return v.ab.length;}),at=sum(tdr,function(v){return v.ab.length+v.na.length;});
+  var sc=scoreOf(td);
+  $("lede-ter").innerHTML=vs.length?"Cette semaine, <b>"+pl(vs.length,"visite")+"</b> chez "+pl(new Set(vs.map(function(v){return v.client;})).size,"client")+", dont "+pok.length+" avec la présence pointée chez le client. Le rapport du jour est tiré des messages de fin de journée : ce qui a été dit, ce qui manque, et la prochaine étape.":"Aucune visite cette semaine pour cette sélection.";
+  var perDay=TR.semaine.map(function(j){return vs.filter(function(v){return v.j===j;}).length;});
+  $("kpis-t").innerHTML=
+    kc({ico:"map-pin",l:"Visites cette semaine",v:vs.length,sp:bars(perDay),s:"<span>dont <b>"+td.length+"</b> aujourd'hui, du lundi au jeudi</span>"})+
+    kc({ico:"circle-check-big",l:"Présence pointée",v:vs.length?pct(pok.length/vs.length):"–",s:vs.length?"<span><b>"+pok.length+"</b> sur "+vs.length+"</span>"+(vs.length-pok.length?dl((vs.length-pok.length)+" à vérifier","bad"):""):"aucune visite"})+
+    kc({ico:"list-checks",l:"Sujets attendus abordés",v:at?pct(ab/at):"–",s:at?"<span><b>"+ab+"</b> sur "+at+" aujourd'hui</span>"+(sc!=null?dl("échange "+f1(sc)+" / 10",sc>=7?"up":sc>=5?"nt":"dn"):""):"aucun rapport aujourd'hui"})+
+    kc({ico:"user-round",l:"Clients non vus depuis 30 jours",v:nv.length,s:"<span>sur "+pl(pf.length,"client")+" du portefeuille</span>"});
+  renderRapport();renderNonVus(nv,pf);renderCarte(vs);}
+function renderRapport(){
+  var coms=COMS.filter(comOK);if(coms.indexOf(state.tc)<0)state.tc=coms[0];
+  var allTd=TR.visites.filter(function(v){return v.j===TR.jour;});
+  $("seg-tc").innerHTML=coms.map(function(c){var s=scoreOf(allTd.filter(function(v){return v.com===c;}));return '<button data-tc="'+esc(c)+'" class="'+(state.tc===c?"on":"")+'">'+av(c,1)+esc(c)+(s!=null?' <span class="c">'+f1(s)+"</span>":"")+"</button>";}).join("");
+  var c=state.tc,ms=TR.messages[c]||[];
+  $("chat").innerHTML='<div class="chat-h"><span class="ic">'+ic("message-circle")+'</span><div><p class="t">Groupe « Commerciaux terrain »</p><p class="s">Messages de '+esc(c)+", "+shortD(TR.jour)+'</p></div></div><div class="chat-b"><p class="chat-d">'+shortD(TR.jour)+"</p>"+ms.map(function(m){return '<div class="bub"><p class="au">'+esc(c)+"</p><p>"+esc(m[1])+'</p><span class="tm">'+m[0].replace(":"," h ")+"</span></div>";}).join("")+"</div>";
+  var vd=allTd.filter(function(v){return v.com===c;}),vf=vd.filter(function(v){return socOK(v.soc)&&zoneOK(v.zone);}),s=scoreOf(vf);
+  var head='<div class="rep-h"><div><p class="t">Rapport du jour, tiré automatiquement</p><p class="s">'+pl(vf.length,"visite")+(vf.length<vd.length?" sur "+vd.length+" (filtre)":"")+" · "+esc(c)+'</p></div><div class="score '+scCls(s)+'"><b>'+(s==null?"–":f1(s))+"</b><small>/ 10</small></div></div>";
+  $("rep").innerHTML=head+(vf.length?vf.map(function(v,i){
+    return '<div class="rv" data-open="vis" data-n="'+v.id+'"><div class="rv-t"><span class="rv-n">'+(i+1)+'</span><div class="rv-m"><p class="nm">'+esc(v.client)+'</p><p class="mt2">'+esc(v.zone)+" · "+v.h1.replace(":"," h ")+" à "+v.h2.replace(":"," h ")+" · "+esc(v.soc)+'</p></div><span class="score sm '+scCls(v.sc)+'">'+(v.sc==null?"–":v.sc)+"<small>/10</small></span></div>"+
+      '<div class="rv-g"><p class="k">Pointage</p><div>'+ptPill(v)+(v.abs?' <span class="pill n">Interlocuteur absent</span>':"")+'</div>'+
+      (v.abs?'<p class="k">Échange</p><div class="nx">'+ic("triangle-alert")+'Interlocuteur absent : catalogue laissé sur place, échange à refaire. Non noté.</div>':'<p class="k">Sujets abordés</p><div class="chips">'+(v.ab.length?v.ab.map(function(x){return '<span class="pill n">'+SUJ[x]+"</span>";}).join(""):'<span class="zero">aucun</span>')+"</div>"+
+      '<p class="k bad">Attendus, non abordés</p><div class="chips">'+(v.na.length?v.na.map(function(x){return '<span class="pill r">'+SUJ[x]+"</span>";}).join(""):'<span class="pill g">tout a été abordé</span>')+"</div>"+
+      '<p class="k">Arguments omis</p><div class="chips">'+(v.om.length?v.om.map(function(x){return '<span class="pill a">'+ARG[x]+"</span>";}).join(""):'<span class="pill g">aucun</span>')+"</div>"+
+      '')+'<p class="k">Prochaine étape</p><div class="nx">'+ic("arrow-right")+esc(v.next||"à préciser")+"</div></div></div>";}).join(""):'<p class="empty">Aucune visite de '+esc(c)+" aujourd'hui pour ce filtre. Les messages restent visibles à gauche.</p>");}
+function renderNonVus(nv,pf){
+  var byC=COMS.filter(comOK).map(function(c){return [c,nv.filter(function(p){return p.com===c;}).length,pf.filter(function(p){return p.com===c;}).length];});
+  $("nv-sum").innerHTML=byC.map(function(r){return '<button class="nvc'+(state.com===r[0]?" on":"")+'" data-com="'+esc(r[0])+'">'+av(r[0],1)+'<span><b>'+esc(r[0])+"</b><small>"+r[1]+" non vu"+(r[1]>1?"s":"")+" sur "+r[2]+'</small></span><span class="n '+(r[1]?"r":"")+'">'+r[1]+"</span></button>";}).join("");
+  $("t-nv").innerHTML=nv.length?'<thead><tr><th>Client</th><th>Zone</th><th>Commercial</th><th>Dernière visite</th><th>Dernier contact</th><th class="hm">Société</th></tr></thead><tbody>'+nv.map(function(p){var k=since(p.lv),kc_=since(p.cd);
+    return '<tr data-open="nv" data-n="'+esc(p.client)+'"><td class="w"><div class="who"><span class="av cl">'+cini(p.client)+'</span><div><p class="nm">'+esc(p.client)+'</p><p class="mt2">'+esc(p.seg)+'</p></div></div></td><td data-l="Zone">'+esc(p.zone)+'<small class="sub">'+(ABJ[p.zone]?"Abidjan":"Intérieur")+'</small></td><td data-l="Commercial"><span class="com">'+av(p.com,1)+esc(p.com)+'</span></td><td data-l="Dernière visite">'+(k===null?'<span class="pill r">jamais visité</span>':'<span class="pill r">il y a '+k+" j</span>")+'</td><td data-l="Dernier contact">'+(p.cd?esc(p.ct)+'<small class="sub">'+dd(p.cd)+" · il y a "+kc_+" j</small>":'<span class="zero">aucun</span>')+'</td><td class="hm" data-l="Société">'+esc(p.soc)+"</td></tr>";}).join("")+"</tbody>":'<tbody><tr><td><p class="empty">Tous les clients de cette sélection ont été vus depuis moins de 30 jours.</p></td></tr></tbody>';}
+/* carte */
+function proj(b,W,H,pad){var lat0=(b[1]+b[3])/2,k=Math.cos(lat0*Math.PI/180),sx=(W-2*pad)/((b[2]-b[0])*k),sy=(H-2*pad)/(b[3]-b[1]),s=Math.min(sx,sy),ox=(W-(b[2]-b[0])*k*s)/2,oy=(H-(b[3]-b[1])*s)/2;
+  return function(p){return [(ox+(p[0]-b[0])*k*s).toFixed(1),(oy+(b[3]-p[1])*s).toFixed(1)];};}
+function bbox(pts){var b=[1e9,1e9,-1e9,-1e9];pts.forEach(function(p){b[0]=Math.min(b[0],p[0]);b[1]=Math.min(b[1],p[1]);b[2]=Math.max(b[2],p[0]);b[3]=Math.max(b[3],p[1]);});return b;}
+function path(r,pr){return "M"+r.map(function(p){return pr(p).join(" ");}).join("L")+"Z";}
+var PTC={ok:"#18794E",loin:"#D99A1E",non:"#C8352B"};var VOFF={"Grand-Bassam":[0,16,"middle"],"Alépé":[8,-4,"start"],"Daloa":[-8,-4,"end"],"Bouaflé":[8,-6,"start"],"Soubré":[-8,4,"end"]};var LBLDY={"Attécoubé":-12,"Cocody":-12,"Abobo":-12,"Anyama":-12,"Songon":-12,"Bingerville":-12,"Yopougon":20};
+function dots(l,pr,rad){var seen={};return l.map(function(v){var p=TR.portefeuille.filter(function(x){return x.client===v.client;})[0];if(!p)return "";var k=v.client,n=seen[k]=(seen[k]||0)+1,a=n*2.1,xy=pr(p.pt),x=+xy[0]+(n>1?Math.cos(a)*rad*1.6:0),y=+xy[1]+(n>1?Math.sin(a)*rad*1.6:0);
+  return '<circle class="pt" data-open="vis" data-n="'+v.id+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rad+'" fill="'+PTC[v.pt]+'"><title>'+esc(v.client+" · "+v.com+" · "+shortD(v.j)+" · "+PTL[v.pt])+"</title></circle>";}).join("");}
+function renderCarte(all){
+  var dsel=state.tj,vs=all.filter(function(v){return dsel==="Tous"||v.j===dsel;});
+  $("seg-tj").innerHTML=[["Tous","Semaine",all.length]].concat(TR.semaine.map(function(j){var d=dobj(j);return [j,JRS[d.getDay()].charAt(0).toUpperCase()+JRS[d.getDay()].slice(1,3)+". "+d.getDate(),all.filter(function(v){return v.j===j;}).length];})).map(function(s){return '<button data-tj="'+s[0]+'" class="'+(dsel===s[0]?"on":"")+'">'+s[1]+' <span class="c">'+s[2]+"</span></button>";}).join("");
+  var ab=vs.filter(function(v){return ABJ[v.zone];}),it=vs.filter(function(v){return !ABJ[v.zone];});
+  /* pays */
+  var W=420,H=440,allc=[];TR.civ.forEach(function(r){allc=allc.concat(r);});var b=bbox(allc),pr=proj(b,W,H,14);
+  var abPts=[];TR.communes.forEach(function(c){abPts=abPts.concat(c.ring);});var ab_b=bbox(abPts),a0=pr([ab_b[0],ab_b[3]]),a1=pr([ab_b[2],ab_b[1]]);
+  var vl=Object.keys(TR.villes).map(function(n){var xy=pr(TR.villes[n]),has=it.some(function(v){return v.zone===n;});var o=VOFF[n]||[7,-6,"start"];return has?'<text class="vlab" text-anchor="'+o[2]+'" x="'+(+xy[0]+o[0])+'" y="'+(+xy[1]+o[1])+'">'+esc(n)+"</text>":"";}).join("");
+  var svg1='<svg viewBox="0 0 '+W+" "+H+'" class="map" role="img" aria-label="Carte de la Côte d\'Ivoire, visites de la semaine">'+TR.civ.map(function(r){return '<path d="'+path(r,pr)+'" class="land"/>';}).join("")+''+
+    '<rect x="'+(+a0[0]-5)+'" y="'+(+a0[1]-5)+'" width="'+(a1[0]-a0[0]+10)+'" height="'+(a1[1]-a0[1]+10)+'" rx="4" class="abx"/><text class="vlab b" x="'+(+a1[0]+8)+'" y="'+(+a1[1]+4)+'">Abidjan · '+ab.length+"</text>"+vl+dots(it,pr,5.5)+"</svg>";
+  /* Abidjan */
+  var W2=420,H2=340,pr2=proj(ab_b,W2,H2-46,10),BOT=["Adjamé","Plateau","Treichville","Marcory","Koumassi","Port-Bouët"],lb="";
+  var cen={};TR.communes.forEach(function(c){var xs=0,ys=0;c.ring.forEach(function(p){xs+=p[0];ys+=p[1];});cen[c.nom]=pr2([xs/c.ring.length,ys/c.ring.length]);});
+  BOT.forEach(function(n,i){var x=70+i*(W2-140)/(BOT.length-1),y=H2-10,on=ab.some(function(v){return v.zone===n;}),c=cen[n];
+    lb+='<path d="M'+c[0]+" "+c[1]+"L"+x.toFixed(1)+" "+(y-13)+'" class="lead"/><text class="clab'+(on?" on":"")+'" x="'+x.toFixed(1)+'" y="'+y+'">'+esc(n)+"</text>";});
+  var svg2='<svg viewBox="0 0 '+W2+" "+H2+'" class="map" role="img" aria-label="Carte des communes d\'Abidjan, visites de la semaine">'+TR.communes.map(function(c){var on=ab.some(function(v){return v.zone===c.nom;});return '<path d="'+path(c.ring,pr2)+'" class="com'+(on?" on":"")+'"><title>'+esc(c.nom)+"</title></path>";}).join("")+lb+
+    TR.communes.filter(function(c){return BOT.indexOf(c.nom)<0;}).map(function(c){var xy=cen[c.nom],on=ab.some(function(v){return v.zone===c.nom;});return '<text class="clab'+(on?" on":"")+'" x="'+xy[0]+'" y="'+(+xy[1]+(LBLDY[c.nom]||0))+'">'+esc(c.nom)+"</text>";}).join("")+dots(ab,pr2,5.5)+"</svg>";
+  $("map-ci").innerHTML=svg1;$("map-ab").innerHTML=svg2;
+  $("map-leg").innerHTML='<span><i style="background:'+PTC.ok+'"></i>Présence pointée chez le client</span><span><i style="background:'+PTC.loin+'"></i>Pointé hors du site</span><span><i style="background:'+PTC.non+'"></i>Non pointé</span>';
+  var zs={};vs.forEach(function(v){var z=zs[v.zone]=zs[v.zone]||{n:0,ok:0,c:[]};z.n++;if(v.pt==="ok")z.ok++;if(z.c.indexOf(v.com)<0)z.c.push(v.com);});
+  var zl=Object.keys(zs).sort(function(a,b){return zs[b].n-zs[a].n||(a<b?-1:1);}),zall=zl.length;if(!state.zmore)zl=zl.slice(0,8);
+  $("t-zone").innerHTML=zl.length?'<thead><tr><th>Zone</th><th class="r">Visites</th><th>Pointage</th><th class="hm">Commerciaux</th></tr></thead><tbody>'+zl.map(function(z){var o=zs[z],bad=o.n-o.ok;return '<tr data-zone="'+esc(z)+'"><td class="w"><b>'+esc(z)+'</b><small class="sub">'+(ABJ[z]?"Abidjan":"Intérieur")+'</small></td><td class="num" data-l="Visites">'+o.n+'</td><td data-l="Pointage">'+(bad?'<span class="pill a">'+o.ok+" / "+o.n+" pointées</span>":'<span class="pill g">'+o.ok+" / "+o.n+" pointées</span>")+'</td><td class="hm" data-l="Commerciaux"><span class="avs">'+o.c.map(function(c){return av(c,1);}).join("")+"</span></td></tr>";}).join("")+"</tbody>":'<tbody><tr><td><p class="empty">Aucune visite pour ce jour et cette sélection.</p></td></tr></tbody>';
+  $("zone-more").innerHTML=zall>zl.length?'<button class="more" data-zmore="1">Voir les '+(zall-zl.length)+" autres zones</button>":"";
+  var bad=vs.filter(function(v){return v.pt!=="ok";});
+  $("map-n").innerHTML=bad.length?"<b>"+pl(bad.length,"visite")+" à vérifier</b> : "+bad.map(function(v){return esc(v.com)+" chez "+esc(v.client)+" ("+(v.pt==="loin"?"pointé à "+String(v.d).replace(".",",")+" km":"non pointé")+", "+shortD(v.j)+")";}).join(" ; ")+".":"Toutes les visites de cette sélection sont pointées chez le client.";}
+function drVis(v){var p=TR.portefeuille.filter(function(x){return x.client===v.client;})[0]||{};
+  var rep=v.msg!=null;
+  openDr(ic("map-pin")+"Visite du "+dd(v.j),'<div class="tags">'+ptPill(v)+(rep&&v.sc!=null?'<span class="score sm '+scCls(v.sc)+'">'+v.sc+"<small>/10</small></span>":"")+'</div><h3>'+esc(v.client)+'</h3><p class="why">'+esc(v.zone)+", "+esc(p.seg||"")+'</p>'+
+  '<dl class="props"><dt>Commercial</dt><dd>'+esc(v.com)+" ("+esc(v.soc)+')</dd><dt>Contact</dt><dd>'+(p.civ||"")+" "+esc(p.contact||"")+'</dd><dt>Sur place</dt><dd>'+v.h1.replace(":"," h ")+" à "+v.h2.replace(":"," h ")+'</dd><dt>Pointage</dt><dd>'+(v.pt==="ok"?"chez le client, à "+v.d+" m de l'adresse":v.pt==="loin"?"à "+String(v.d).replace(".",",")+" km de l'adresse du client":"aucun pointage ce jour-là")+"</dd></dl>"+
+  (rep?'<p class="lbl">Ce qu\'il faut aborder à la prochaine visite</p><ul>'+v.na.map(function(x){return "<li>"+SUJ[x]+"</li>";}).join("")+v.om.map(function(x){return "<li>Argument : "+ARG[x].charAt(0).toLowerCase()+ARG[x].slice(1)+"</li>";}).join("")+(v.na.length+v.om.length?"":"<li>Rien de plus : l'échange a couvert ce qui était attendu.</li>")+'</ul><p class="lbl">Prochaine étape notée</p><div class="msg">'+esc(v.next)+"</div>":'<p class="dnote">Le rapport détaillé est disponible pour les messages du jour. Les visites des jours précédents gardent leur pointage.</p>'));}
+function drNv(p){var k=since(p.lv);
+  openDr(ic("user-round")+"Client non vu",'<div class="tags"><span class="pill r">'+(k===null?"jamais visité":"non vu depuis "+k+" jours")+'</span></div><h3>'+esc(p.client)+'</h3><p class="why">'+esc(p.zone)+", "+esc(p.seg)+'</p><dl class="props"><dt>Commercial</dt><dd>'+esc(p.com)+" ("+esc(p.soc)+')</dd><dt>Contact</dt><dd>'+p.civ+" "+esc(p.contact)+'</dd><dt>Dernière visite</dt><dd>'+(p.lv?dd(p.lv):"aucune")+'</dd><dt>Dernier contact</dt><dd>'+(p.cd?esc(p.ct)+", le "+dd(p.cd):"aucun")+'</dd></dl><p class="lbl">À faire</p><ul><li>Prévoir une visite dans la tournée de '+esc(p.com)+" la semaine prochaine.</li><li>À défaut, un appel pour reprendre contact et noter le besoin.</li></ul>");}
+
 /* ---------- rendu ---------- */
 function counters(){var du=dues(devis()),lt=du.filter(function(d){return late(d)>0;}).length,ao=aoSoon(aos()).length;
   $("k-rel").textContent=du.length||"";$("m-rel").textContent=du.length||"";$("k-rel").className="k"+(lt?" red":"");
-  $("k-dev").textContent=enCours(devis()).length||"";$("k-ech").textContent=ao||"";$("m-ech").textContent=ao||"";}
+  $("k-dev").textContent=enCours(devis()).length||"";$("k-ech").textContent=ao||"";$("m-ech").textContent=ao||"";var nv=nonVus(tPort()).length;$("k-ter").textContent=nv||"";$("m-ter").textContent=nv||"";}
 function render(){socMenu();comMenu();counters();
-  if(state.v==="jour")renderJour();if(state.v==="relances")renderRel();if(state.v==="devis")renderDev();if(state.v==="ventes")renderVen();if(state.v==="echeances")renderEch();}
+  if(state.v==="jour")renderJour();if(state.v==="relances")renderRel();if(state.v==="devis")renderDev();if(state.v==="ventes")renderVen();if(state.v==="echeances")renderEch();if(state.v==="terrain")renderTer();}
 [].forEach.call(document.querySelectorAll("i[data-i]"),function(el){var w=document.createElement("span");w.innerHTML=ic(el.getAttribute("data-i"));var sv=w.firstChild;if(el.className)sv.setAttribute("class","i "+el.className);el.replaceWith(sv);});
 Chart.defaults.font.family='"Inter",system-ui,sans-serif';Chart.defaults.font.size=12;Chart.defaults.color="#6B6B6B";
 $("date").textContent=longD(T);
