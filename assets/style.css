@@ -495,3 +495,9 @@ tr:hover .rowact,.li:hover .rowact{opacity:1}
 .vh-app{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .app-lk{width:auto;flex:none;text-decoration:none;border-color:var(--acc);color:var(--acct)}
 .app-lk:hover{background:var(--accb)}
+
+@media (max-width:600px){
+  .vq li{grid-template-columns:10px minmax(0,1fr) auto;row-gap:2px}
+  .vq-c b{white-space:nowrap}
+  .vq-j{grid-column:2/4;font-size:11.5px}
+}
