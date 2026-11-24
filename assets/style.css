@@ -478,3 +478,20 @@ tr:hover .rowact,.li:hover .rowact{opacity:1}
   .tbl.tz td[data-l]:before{display:none}
   .tbl.tz .hm{display:none}
 }
+
+/* liste des visites à vérifier (pointage) */
+#map-n .vq-t{margin-bottom:6px}
+.vq{list-style:none;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.vq li{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid var(--line2);font-size:13px}
+.vq li:first-child{border-top:0}
+.vq-c{min-width:0}.vq-c b{display:block;color:var(--ink)}.vq-c small{display:block;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vq-d{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.vq-d.y{background:#E5A100}.vq-d.r{background:var(--red)}
+.vq-e{font:600 12px/1 var(--sans);padding:4px 8px;border-radius:999px;white-space:nowrap}
+.vq-e.y{background:var(--ambb);color:var(--amb)}.vq-e.r{background:var(--redb);color:var(--red)}
+.vq-j{font-size:12px;color:var(--mut);white-space:nowrap}
+.vq-lg{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--mut)}.vq-lg .vq-d.r{margin-left:10px}
+
+.vh-app{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.app-lk{width:auto;flex:none;text-decoration:none;border-color:var(--acc);color:var(--acct)}
+.app-lk:hover{background:var(--accb)}
